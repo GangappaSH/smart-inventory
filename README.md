@@ -69,40 +69,6 @@ The system automates inventory tracking, manages suppliers, purchases, and sales
 
 ---
 
-# 📷 Screenshots
-
-## Login
-
-> Add screenshot here
-
-![Login](screenshots/login.png)
-
----
-
-## Dashboard
-
-![Dashboard](screenshots/dashboard.png)
-
----
-
-## Inventory
-
-![Inventory](screenshots/inventory.png)
-
----
-
-## Sales Analytics
-
-![Sales](screenshots/sales.png)
-
----
-
-## AI Forecast
-
-![Forecast](screenshots/forecast.png)
-
----
-
 # 📂 Project Structure
 
 ```text
@@ -206,5 +172,3 @@ LinkedIn:
 https://www.linkedin.com/in/gangappa-hegganni
 
 ---
-
-⭐ If you found this project helpful, consider giving it a star!
