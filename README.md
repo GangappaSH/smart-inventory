@@ -1,7 +1,5 @@
 # 🚀 Smart Inventory & Sales Intelligence System
 
-An AI-powered inventory and sales management system built with **Flask**, **SQLite**, **Chart.js**, and **Machine Learning** to help small businesses efficiently manage inventory, suppliers, purchases, sales, and demand forecasting.
-
 ![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python)
 ![Flask](https://img.shields.io/badge/Flask-Web_Framework-black?logo=flask)
 ![SQLite](https://img.shields.io/badge/Database-SQLite-blue?logo=sqlite)
@@ -26,47 +24,44 @@ The system automates inventory tracking, manages suppliers, purchases, and sales
 - 📦 Product Management
 - 🏢 Supplier Management
 - 🛒 Purchase Management
-- 💰 Sales Management
-- 📉 Automatic Stock Updates
+- 💰 Sales Management (Cart-Based Billing)
+- 🔄 Automatic Stock Updates
 - ⚠️ Low Stock Alerts
 - 📊 Interactive Dashboard
-- 📈 Sales Analytics
-- 🤖 AI Demand Forecasting using Linear Regression
+- 📈 Sales Analytics (Daily & Monthly) with Product Performance Reports
+- 🤖 AI demand forecasting (Linear Regression via scikit-learn)
 - 🔍 Search & Filtering
 - 📱 Responsive Interface
-
 ---
 
 # 🛠 Tech Stack
 
 ### Backend
 
-- Python
+- Python 3
 - Flask
-- SQLAlchemy
-- Flask-Login
-- Flask-Bcrypt
 
 ### Frontend
 
 - HTML5
 - CSS3
 - JavaScript
+- Chart.js
 
 ### Database
 
-- SQLite
+- SQLite (via SQLAlchemy)
 
-### Machine Learning
+### AI & Machine Learning
 
-- Scikit-learn
+- Scikit-learn (LinearRegression)
 - Pandas
 - NumPy
 
-### Data Visualization
+### Authentication
 
-- Chart.js
-
+- Flask-Login
+- Flask-Bcrypt
 ---
 
 # 📂 Project Structure
@@ -75,7 +70,7 @@ The system automates inventory tracking, manages suppliers, purchases, and sales
 smart-inventory
 │
 ├── app.py
-├── config.py
+├── 
 ├── requirements.txt
 ├── README.md
 ├── .gitignore
@@ -123,6 +118,12 @@ Open
 ```
 http://127.0.0.1:5000
 ```
+Login Credentials
+
+| Role  | Username | Password  |
+|-------|----------|-----------|
+| Admin | admin    | admin123  |
+| Staff | staff1   | staff123  |
 
 ---
 
