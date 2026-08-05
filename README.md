@@ -120,10 +120,11 @@ http://127.0.0.1:5000
 ```
 Login Credentials
 
-| Role  | Username | Password  |
-|-------|----------|-----------|
-| Admin | admin    | admin123  |
-| Staff | staff1   | staff123  |
+| Role    | Username      | Password |
+|---------|---------------|----------|
+| Company | ganeshtraders | ganesh123|
+| Admin   | admin         | admin123 |
+| Staff   | staff1        | staff123 |
 
 ---
 
