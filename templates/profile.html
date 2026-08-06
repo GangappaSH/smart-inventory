@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block title %}Profile | Smart Inventory{% endblock %}
+{% block page_title %}Account Settings{% endblock %}
+{% block page_sub %}Manage your personal identity and business credentials{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  .form-section {
+    margin-bottom: 2rem;
+  }
+
+  .form-section-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .form-section-title i {
+    color: var(--accent-blue);
+  }
+
+  .password-hints {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    background: var(--card-soft);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .password-hints ul {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+  }
+
+  @media (max-width: 992px) {
+    .profile-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="POST">
+  <div class="profile-layout">
+    <!-- Left Panel: Identity & Contact -->
+    <div class="card animate-in">
+      <div class="form-section">
+        <div class="form-section-title">
+          <i class="fa-solid fa-user-pen"></i>
+          Personal Identity
+        </div>
+        
+        <div style="display: grid; gap: 1.25rem;">
+          <div class="form-group">
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Full Name *</label>
+            <input type="text" name="full_name" class="form-control" value="{{ current_user.full_name }}" required>
+          </div>
+
+          <div class="form-group">
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Personal Email *</label>
+            <input type="email" name="email" class="form-control" value="{{ current_user.email }}" required>
+          </div>
+
+          <div class="form-group">
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Phone Number</label>
+            <input type="text" name="phone" class="form-control" value="{{ current_user.phone or '' }}" placeholder="e.g. +91 9876543210">
+          </div>
+
+          <div class="form-group">
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Username</label>
+            <input type="text" class="form-control" value="{{ current_user.username }}" disabled style="background: var(--bg); cursor: not-allowed;">
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Username cannot be changed after registration.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin: 1rem 0; border-top: 1px dashed var(--border);"></div>
+
+      <div class="form-section">
+        <div class="form-section-title">
+          <i class="fa-solid fa-building-circle-check"></i>
+          Business Profile
+        </div>
+        
+        <div style="display: grid; gap: 1.25rem;">
+          <div class="form-group">
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Company Name</label>
+            <input type="text" name="company_name" class="form-control" value="{{ current_user.company.name }}" 
+                   {{ 'required' if current_user.role == 'admin' else 'disabled' }} 
+                   style="{{ 'background: var(--bg); cursor: not-allowed;' if current_user.role != 'admin' }}">
+          </div>
+
+          <div class="form-group">
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Business Email</label>
+            <input type="email" name="company_email" class="form-control" value="{{ current_user.company.email }}" 
+                   {{ 'required' if current_user.role == 'admin' else 'disabled' }}
+                   style="{{ 'background: var(--bg); cursor: not-allowed;' if current_user.role != 'admin' }}">
+          </div>
+          {% if current_user.role != 'admin' %}
+            <p style="font-size: 0.75rem; color: var(--text-muted);">Only administrators can modify business profile details.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel: Security -->
+    <div class="card animate-in" style="animation-delay: 0.1s;">
+      <div class="form-section">
+        <div class="form-section-title">
+          <i class="fa-solid fa-shield-halved"></i>
+          Security & Access
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+          <div style="grid-column: span 2;">
+            <label class="badge-red" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Current Password *</label>
+            <div style="position: relative;">
+              <input class="form-control" type="password" name="current_password" placeholder="Enter password to authorize changes">
+              <i class="fa-solid fa-eye password-toggle" style="position: absolute; right: 0.8rem; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);"></i>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Required only when changing passwords or company IDs.</p>
+          </div>
+          
+          <div>
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">New Secure Password</label>
+            <div style="position: relative;">
+              <input class="form-control" type="password" name="new_password" placeholder="Min 8 characters">
+              <i class="fa-solid fa-eye password-toggle" style="position: absolute; right: 0.8rem; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);"></i>
+            </div>
+          </div>
+          <div>
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Confirm New Password</label>
+            <div style="position: relative;">
+              <input class="form-control" type="password" name="confirm_password" placeholder="Re-type new password">
+              <i class="fa-solid fa-eye password-toggle" style="position: absolute; right: 0.8rem; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);"></i>
+            </div>
+          </div>
+
+          <div style="grid-column: span 2;">
+            <div class="password-hints">
+              <strong><i class="fa-solid fa-circle-info"></i> Strong Password Requirements:</strong>
+              <ul>
+                <li>At least 8 characters long</li>
+                <li>At least one uppercase (A-Z) and one lowercase letter (a-z)</li>
+                <li>At least one number (0-9)</li>
+                <li>At least one special symbol (@$!%*?&)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin: 2rem 0; border-top: 1px dashed var(--border);"></div>
+
+      <div class="form-section" style="margin-bottom: 0;">
+        <div class="form-section-title">
+          <i class="fa-solid fa-key"></i>
+          Company Level Credentials
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+          <div>
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Company User ID</label>
+            <input class="form-control" type="text" name="company_userid" value="{{ current_user.company.company_userid or '' }}" {{ 'disabled' if current_user.role != 'admin' }}>
+          </div>
+          <div>
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">New Company Password</label>
+            <input class="form-control" type="password" name="company_password" placeholder="Set new global company PW" {{ 'disabled' if current_user.role != 'admin' }}>
+          </div>
+          {% if current_user.role != 'admin' %}
+            <div style="grid-column: span 2;">
+              <p style="font-size: 0.75rem; color: var(--text-muted);">Only administrators can manage company-level login credentials.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+        <button type="submit" class="btn btn-primary" style="height: 52px; min-width: 240px; justify-content: center;">
+          <i class="fa-solid fa-circle-check"></i> 
+          <span>Update Account & Details</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+

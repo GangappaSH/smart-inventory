@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block title %}Suppliers | Smart Inventory{% endblock %}
+{% block page_title %}Suppliers{% endblock %}
+{% block page_sub %}Manage your product sourcing partners{% endblock %}
+
+{% block extra_css %}
+<style>
+  .supplier-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 1rem;
+    align-items: flex-end;
+  }
+
+  .edit-form {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    width: 100%;
+  }
+
+  @media (max-width: 992px) {
+    .supplier-form-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .supplier-form-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card animate-in" style="margin-bottom: 1.5rem;">
+  <div class="card-header" style="border: 0; margin-bottom: 1rem; padding-bottom: 0;">
+    <h3><i class="fa-solid fa-plus-circle" style="color: var(--accent-blue)"></i> Add New Supplier</h3>
+  </div>
+  <form method="POST" action="{{ url_for('inventory.add_supplier') }}" class="supplier-form-grid">
+    <div>
+      <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Supplier Name *</label>
+      <input type="text" name="name" required placeholder="e.g. Global Tech Solutions" class="form-control">
+    </div>
+    <div>
+      <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Contact Phone</label>
+      <input type="text" name="contact" placeholder="e.g. +91 98765 43210" class="form-control">
+    </div>
+    <div>
+      <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Email Address</label>
+      <input type="email" name="email" placeholder="e.g. contact@globaltech.com" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-primary">
+      <i class="fa-solid fa-plus"></i> Add Supplier
+    </button>
+  </form>
+</div>
+
+<div class="card animate-in" style="animation-delay: 0.1s; padding: 0;">
+  <div class="card-header" style="padding: 1.25rem; border-bottom: 1px solid var(--border);">
+    <h3><i class="fa-solid fa-truck" style="color: var(--accent-purple)"></i> Registered Suppliers</h3>
+    <span class="badge badge-blue">{{ suppliers|length }} Total</span>
+  </div>
+  
+  <div class="table-wrap">
+    <table class="responsive-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Supplier Info</th>
+          <th>Contact Details</th>
+          <th style="text-align: center;">Products</th>
+          <th style="text-align: right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in suppliers %}
+          <tr id="row-s-{{ s.id }}">
+            <td data-label="#" style="font-size: 0.75rem; color: var(--text-muted);">{{ loop.index }}</td>
+            
+            <!-- View Mode -->
+            <td data-label="Supplier Name" class="view-s-{{ s.id }}">
+              <div style="font-weight: 700; color: var(--text);">{{ s.name }}</div>
+            </td>
+            <td data-label="Contact" class="view-s-{{ s.id }}">
+              <div style="font-size: 0.85rem;"><i class="fa-solid fa-phone" style="font-size: 0.7rem; opacity: 0.5; margin-right: 0.4rem;"></i> {{ s.contact or '—' }}</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-envelope" style="font-size: 0.7rem; opacity: 0.5; margin-right: 0.4rem;"></i> {{ s.email or '—' }}</div>
+            </td>
+
+            <!-- Edit Mode (Hidden) -->
+            <td class="edit-s-{{ s.id }} hide" colspan="2" data-label="Edit Supplier">
+              <form method="POST" action="{{ url_for('inventory.edit_supplier', id=s.id) }}" class="edit-form">
+                <input type="text" name="name" value="{{ s.name }}" required class="form-control" style="flex: 2;">
+                <input type="text" name="contact" value="{{ s.contact or '' }}" placeholder="Phone" class="form-control" style="flex: 1;">
+                <input type="email" name="email" value="{{ s.email or '' }}" placeholder="Email" class="form-control" style="flex: 1.5;">
+                <button type="submit" class="btn btn-primary" style="padding: 0.5rem;"><i class="fa-solid fa-save"></i></button>
+                <button type="button" onclick="cancelEdit('s','{{ s.id }}')" class="btn" style="padding: 0.5rem;"><i class="fa-solid fa-xmark"></i></button>
+              </form>
+            </td>
+
+            <td data-label="Products" style="text-align: center;">
+              <span class="badge badge-blue" style="border-radius: 6px; font-weight: 700;">{{ s.products|length }}</span>
+            </td>
+            
+            <td data-label="Actions" style="text-align: right;">
+              <div class="view-s-{{ s.id }}" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button onclick="startEdit('s','{{ s.id }}')" class="btn" title="Edit">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                {% if not s.products %}
+                  <form method="POST" action="{{ url_for('inventory.delete_supplier', id=s.id) }}" onsubmit="return confirm('Delete supplier {{ s.name }}?')">
+                    <button type="submit" class="btn btn-danger" title="Delete">
+                      <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                  </form>
+                {% else %}
+                  <span class="badge" style="font-size: 0.65rem; opacity: 0.5;">Active</span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 4rem 2rem; color: var(--text-muted);">
+              <div style="font-size: 3rem; opacity: 0.15; margin-bottom: 1rem;"><i class="fa-solid fa-truck-ramp-box"></i></div>
+              <div style="font-weight: 600;">No suppliers yet</div>
+              <p style="font-size: 0.85rem; margin-top: 0.5rem;">Add your first sourcing partner above to link them with products.</p>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function startEdit(type, id) {
+  document.querySelectorAll('.view-' + type + '-' + id).forEach(el => el.classList.add('hide'));
+  document.querySelectorAll('.edit-' + type + '-' + id).forEach(el => el.classList.remove('hide'));
+}
+function cancelEdit(type, id) {
+  document.querySelectorAll('.view-' + type + '-' + id).forEach(el => el.classList.remove('hide'));
+  document.querySelectorAll('.edit-' + type + '-' + id).forEach(el => el.classList.add('hide'));
+}
+</script>
+{% endblock %}
+

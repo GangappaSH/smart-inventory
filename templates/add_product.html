@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if product else 'Add' }} Product | Smart Inventory{% endblock %}
+{% block page_title %}{{ 'Modify Product' if product else 'Add New Product' }}{% endblock %}
+{% block page_sub %}{{ 'Update existing product information' if product else 'Catalog a new item into your inventory' }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+  <div class="card animate-in">
+    <div class="card-header" style="border: 0; padding: 0; margin-bottom: 2rem;">
+      <h3><i class="fa-solid fa-box-open" style="color: var(--accent-blue)"></i> Product Specifications</h3>
+    </div>
+
+    <form method="POST">
+      <div style="display: grid; gap: 1.5rem;">
+        
+        <!-- Primary Info -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Product Name *</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-tag"></i>
+              <input type="text" name="name" class="form-control" placeholder="e.g. Wireless Mouse" required value="{{ product.name if product else '' }}">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Internal ID</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-hashtag"></i>
+              <input type="text" class="form-control" value="{{ 'PRD%04d'|format(product.id) if product else 'SYSTEM-GEN' }}" readonly style="background: rgba(0,0,0,0.1); cursor: not-allowed;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Categorization -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Category *</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-layer-group"></i>
+              <select class="form-control" name="category_id" required style="padding-left: 2.75rem;">
+                <option value="">Select Category</option>
+                {% for c in categories %}
+                  <option value="{{ c.id }}" {% if product and product.category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Primary Supplier</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-truck-field"></i>
+              <select class="form-control" name="supplier_id" style="padding-left: 2.75rem;">
+                <option value="">Select Supplier</option>
+                {% for s in suppliers %}
+                  <option value="{{ s.id }}" {% if product and product.supplier_id == s.id %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin: 1rem 0; border-top: 1px dashed var(--border);"></div>
+
+        <!-- Pricing & Stock -->
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+          <div class="form-group">
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Selling Price (₹) *</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-indian-rupee-sign"></i>
+              <input type="number" step="0.01" name="price" class="form-control" placeholder="0.00" required value="{{ product.price if product else '' }}">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Cost Price (₹) *</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-hand-holding-dollar"></i>
+              <input type="number" step="0.01" name="cost_price" class="form-control" placeholder="0.00" required value="{{ product.cost_price if product else '' }}">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">GST Rate (%)</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-percent"></i>
+              <input type="number" step="0.1" name="gst_rate" id="gst_rate" class="form-control" placeholder="0.0" value="{{ product.gst_rate if product else 0.0 }}">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Initial Quantity *</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-cubes"></i>
+              <input type="number" name="quantity" class="form-control" placeholder="0" required value="{{ product.quantity if product else '' }}">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Low Stock Alert Level</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <input type="number" name="reorder_level" class="form-control" placeholder="10" required value="{{ product.reorder_level if product else 10 }}">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Measurement Unit</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-ruler-combined"></i>
+              <select class="form-control" name="unit" style="padding-left: 2.75rem;">
+                {% for u in ['pcs','kg','g','litre','ml','pack','box','bottle'] %}
+                  <option value="{{ u }}" {% if product and product.unit == u %}selected{% endif %}>{{ u|upper }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="badge-green" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Final Price (Inc. GST)</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-calculator"></i>
+              <input type="text" id="total_price" class="form-control" value="{{ product.total_price if product else '0.00' }}" readonly style="background: rgba(34, 197, 94, 0.05); cursor: not-allowed; font-weight: 700; color: var(--accent-green);">
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+          <a href="{{ url_for('inventory.index') }}" class="btn" style="width: 120px; justify-content: center;">Cancel</a>
+          <button type="submit" class="btn btn-primary" style="width: 180px; justify-content: center;">
+            <i class="fa-solid fa-floppy-disk"></i> 
+            <span>{{ 'Update Item' if product else 'Create Product' }}</span>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function() {
+    const priceInput = document.querySelector('input[name="price"]');
+    const gstInput = document.querySelector('input[name="gst_rate"]');
+    const totalOutput = document.getElementById('total_price');
+
+    function updateTotal() {
+      const p = parseFloat(priceInput.value) || 0;
+      const g = parseFloat(gstInput.value) || 0;
+      const total = p + (p * g / 100);
+      totalOutput.value = total.toFixed(2);
+    }
+
+    priceInput.addEventListener('input', updateTotal);
+    gstInput.addEventListener('input', updateTotal);
+  })();
+</script>
+{% endblock %}
+

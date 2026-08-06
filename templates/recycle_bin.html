@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Recycle Bin | Smart Inventory{% endblock %}
+{% block page_title %}Recycle Bin{% endblock %}
+{% block page_sub %}Manage deleted products and restore or purge items{% endblock %}
+
+{% block topbar_actions %}
+  <a class="btn" href="{{ url_for('inventory.index') }}">
+    <i class="fa-solid fa-box-open"></i>
+    <span>Back to Inventory</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="card animate-in" style="padding: 0;">
+  <div class="table-wrap">
+    <table class="responsive-table">
+      <thead>
+        <tr>
+          <th>Product ID</th>
+          <th>Product Details</th>
+          <th>Category</th>
+          <th>Pricing</th>
+          <th>Stock Level</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+          <tr>
+            <td data-label="Product ID" style="font-family: monospace; font-weight: 600; color: var(--text-muted);">PRD{{ '%04d'|format(p.id) }}</td>
+            <td data-label="Product Details">
+              <div style="font-weight: 600; color: var(--text);">{{ p.name }}</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">SKU: {{ p.sku }}</div>
+            </td>
+            <td data-label="Category">
+              <span class="badge badge-blue" style="border-radius: 6px;">{{ p.category.name }}</span>
+            </td>
+            <td data-label="Pricing">
+              <div style="font-weight: 800; color: var(--accent-blue);" title="Price with {{ p.gst_rate }}% GST">₹{{ '%.2f'|format(p.total_price) }}</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Base: ₹{{ '%.2f'|format(p.price) }} (+{{ p.gst_rate }}% GST)</div>
+            </td>
+            <td data-label="Stock Level">
+              <span class="stock-count">{{ p.quantity }}</span>
+              <span class="unit-tag">{{ p.unit }}</span>
+            </td>
+            <td data-label="Actions">
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <form method="POST" action="{{ url_for('inventory.restore_product', id=p.id) }}" style="display: inline;">
+                  <button class="btn btn-secondary" type="submit" title="Restore"><i class="fa-solid fa-rotate-left"></i></button>
+                </form>
+                <form method="POST" action="{{ url_for('inventory.purge_product', id=p.id) }}" onsubmit="return confirm('Permanently delete this product?')" style="display: inline;">
+                  <button class="btn btn-danger" type="submit" title="Purge"><i class="fa-solid fa-trash-can"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 4rem 2rem; color: var(--text-muted);">
+              <div style="font-size: 3rem; opacity: 0.15; margin-bottom: 1rem;"><i class="fa-solid fa-trash-can-arrow-up"></i></div>
+              <div style="font-weight: 600;">Recycle bin is empty</div>
+              <div style="font-size: 0.85rem;">Deleted products will appear here so you can restore or purge them.</div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

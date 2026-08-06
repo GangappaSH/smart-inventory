@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register Business | Smart Inventory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card: rgba(22, 27, 34, 0.75);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #4361ee;
+      --accent-glow: rgba(67, 97, 238, 0.3);
+      --input-bg: rgba(13, 17, 23, 0.6);
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      --blur: 12px;
+    }
+
+    html[data-theme="light"] {
+      --bg: #f0f4f8;
+      --card: rgba(255, 255, 255, 0.8);
+      --card-border: rgba(255, 255, 255, 0.5);
+      --text: #1f2937;
+      --text-muted: #6b7280;
+      --accent: #2563eb;
+      --accent-glow: rgba(37, 99, 235, 0.2);
+      --input-bg: rgba(255, 255, 255, 0.9);
+      --shadow: 0 20px 50px rgba(31, 41, 55, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(circle at 10% 20%, var(--accent-glow) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(112, 82, 180, 0.15) 0%, transparent 40%);
+      color: var(--text);
+      padding: 2rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .glass-card {
+      background: var(--card);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 3rem;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--accent), #7052b4);
+    }
+
+    .header {
+      margin-bottom: 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-box {
+      width: 42px;
+      height: 42px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 1.25rem;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    .section-title {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 2rem 0 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--card-border);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-group label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      padding-left: 0.25rem;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    input {
+      width: 100%;
+      height: 46px;
+      background: var(--input-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 0 1rem 0 2.75rem;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-glow);
+    }
+
+    .btn-submit {
+      width: 100%;
+      height: 52px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      transition: all 0.3s ease;
+      margin-top: 3rem;
+    }
+
+    .btn-submit:hover {
+      background: #3651d1;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px var(--accent-glow);
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      margin-bottom: 2rem;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .glass-card { padding: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="glass-card">
+      <div class="header">
+        <div class="brand">
+          <div class="logo-box"><i class="fa-solid fa-boxes-stacked"></i></div>
+          <h1>Register Business</h1>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">
+          Setup your intelligent workspace
+        </div>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for cat, msg in messages %}
+            <div class="alert">
+              <i class="fa-solid fa-circle-exclamation"></i>
+              {{ msg }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('auth.register_company') }}">
+        
+        <div class="section-title"><i class="fa-solid fa-building"></i> Business Details</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Legal Company Name *</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-signature"></i>
+              <input type="text" name="company_name" required placeholder="e.g. Acme Corp">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Business Email *</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-envelope"></i>
+              <input type="email" name="company_email" required placeholder="e.g. contact@acme.com">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-phone"></i>
+              <input type="tel" name="company_phone" placeholder="e.g. +91 98765 43210">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Office Address</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-location-dot"></i>
+              <input type="text" name="company_address" placeholder="City, State, Country">
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title"><i class="fa-solid fa-shield-halved"></i> Master Credentials</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Company User ID *</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-id-card"></i>
+              <input type="text" name="company_userid" required placeholder="Unique ID for your business">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Company Password *</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-key"></i>
+              <input type="password" name="company_password" required placeholder="Master access key">
+            </div>
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label>Confirm Company Password *</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-lock"></i>
+              <input type="password" name="company_confirm_password" required placeholder="Re-type master key">
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title"><i class="fa-solid fa-user-shield"></i> Administrator Account</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Admin Full Name *</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-user"></i>
+              <input type="text" name="admin_name" required placeholder="Owner or Manager name">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Admin Username *</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-at"></i>
+              <input type="text" name="admin_username" required placeholder="Login username">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Admin Password *</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-lock"></i>
+              <input type="password" name="admin_password" required placeholder="Secret password">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Confirm Admin Password *</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-lock"></i>
+              <input type="password" name="confirm_password" required placeholder="Re-type password">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <i class="fa-solid fa-rocket"></i> Create Business Account
+        </button>
+      </form>
+
+      <div class="footer">
+        Already have an account? <a href="{{ url_for('auth.login') }}">Return to Login</a>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
+

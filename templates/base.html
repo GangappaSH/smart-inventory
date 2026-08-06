@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Smart Inventory{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --card: rgba(255, 255, 255, 0.76);
+      --card-solid: #ffffff;
+      --card-soft: rgba(248, 250, 252, 0.92);
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #dbe4f0;
+
+      /* Glass system */
+      --glass-bg: rgba(255, 255, 255, 0.55);
+      --glass-border: rgba(219, 228, 240, 0.65);
+      --glass-shadow: 0 18px 55px rgba(15, 23, 42, 0.12);
+      --ring: rgba(67, 97, 238, 0.35);
+      --hover-bg: rgba(67, 97, 238, 0.08);
+      --blur: 14px;
+      --accent-gradient: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+
+      --sidebar-bg: #ffffff;
+      --sidebar-border: #dbe4f0;
+      --sidebar-text: #1e293b;
+      --sidebar-muted: #64748b;
+      --sidebar-surface: rgba(248, 251, 255, 0.88);
+      --sidebar-hover: rgba(237, 243, 255, 0.9);
+      --sidebar-active-bg: rgba(232, 238, 255, 0.9);
+      --sidebar-active-border: rgba(199, 214, 255, 0.95);
+      --sidebar-active-text: #2f4fd2;
+      --logo-bg: rgba(237, 243, 255, 0.9);
+      --logo-border: rgba(211, 224, 255, 0.9);
+      --logo-text: #1e293b;
+
+      --accent-blue: #4361ee;
+      --accent-purple: #3a0ca3;
+      --accent-green: #22c55e;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+
+      --shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+      --radius: 18px;
+      --radius-sm: 12px;
+      --radius-lg: 22px;
+
+      --ease-out: cubic-bezier(.16, 1, .3, 1);
+    }
+
+    html[data-theme="dark"] {
+      --bg: #0d1117;
+      --card: rgba(22, 27, 34, 0.72);
+      --card-solid: #161b22;
+      --card-soft: rgba(15, 23, 32, 0.72);
+      --text: #e6edf3;
+      --text-muted: #9ba7b4;
+      --border: #21262d;
+
+      /* Glass system */
+      --glass-bg: rgba(17, 24, 39, 0.55);
+      --glass-border: rgba(33, 38, 45, 0.75);
+      --glass-shadow: 0 20px 70px rgba(0, 0, 0, 0.45);
+      --ring: rgba(67, 97, 238, 0.55);
+      --hover-bg: rgba(67, 97, 238, 0.16);
+
+      --sidebar-bg: #0b0f14;
+      --sidebar-border: #21262d;
+      --sidebar-text: #d0d7de;
+      --sidebar-muted: #8b949e;
+      --sidebar-surface: rgba(255, 255, 255, 0.02);
+      --sidebar-hover: rgba(255, 255, 255, 0.05);
+      --sidebar-active-bg: rgba(67, 97, 238, 0.2);
+      --sidebar-active-border: rgba(67, 97, 238, 0.45);
+      --sidebar-active-text: #ffffff;
+      --logo-bg: rgba(67, 97, 238, 0.12);
+      --logo-border: rgba(67, 97, 238, 0.2);
+      --logo-text: #ffffff;
+
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background .25s ease, color .25s ease;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Motion */
+    @keyframes floatIn {
+      from { opacity: 0; transform: translateY(10px) scale(.99); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes glowPulse {
+      0%, 100% { box-shadow: 0 0 0 rgba(67,97,238,0); }
+      50% { box-shadow: 0 0 0 6px rgba(67,97,238,0.10); }
+    }
+    .animate-in { animation: floatIn .55s var(--ease-out) both; }
+
+    /* Focus ring */
+    :focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 4px var(--ring);
+      border-color: transparent !important;
+    }
+
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+    }
+
+    .sidebar {
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      border-right: 1px solid var(--sidebar-border);
+      padding: 1rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      max-height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      transition: transform .25s ease;
+      z-index: 20;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      padding: .75rem;
+      border-radius: 12px;
+      background: var(--logo-bg);
+      border: 1px solid var(--logo-border);
+      color: var(--logo-text);
+      font-weight: 700;
+    }
+
+    .user-box {
+      border: 1px solid var(--sidebar-border);
+      border-radius: 14px;
+      padding: .8rem;
+      display: flex;
+      gap: .7rem;
+      align-items: center;
+      background: var(--sidebar-surface);
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .user-meta { min-width: 0; }
+    .user-meta .name { font-size: .92rem; font-weight: 600; color: var(--sidebar-text); }
+    .user-meta .email,
+    .user-meta .role { font-size: .76rem; color: var(--sidebar-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .nav-links { display: grid; gap: .35rem; }
+
+    .nav-link {
+      text-decoration: none;
+      color: var(--sidebar-text);
+      padding: .7rem .8rem;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      font-size: .9rem;
+      border: 1px solid transparent;
+      transition: all .2s ease;
+    }
+
+    .nav-link:hover { background: var(--sidebar-hover); border-color: var(--sidebar-border); }
+    .nav-link.active { background: var(--sidebar-active-bg); border-color: var(--sidebar-active-border); color: var(--sidebar-active-text); }
+
+    .logout-wrap { margin-top: auto; }
+
+    .main {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: .9rem;
+      align-items: center;
+      padding: 1rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+    }
+
+    .hamburger {
+      display: none;
+      border: 1px solid var(--border);
+      background: var(--card-soft);
+      color: var(--text);
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .title-wrap h1 { margin: 0; font-size: 1.05rem; }
+    .title-wrap p { margin: .2rem 0 0; color: var(--text-muted); font-size: .84rem; }
+
+    .searchbar {
+      position: relative;
+      max-width: 420px;
+      width: 100%;
+      justify-self: center;
+    }
+
+    .searchbar i {
+      position: absolute;
+      left: .75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: .82rem;
+    }
+
+    .searchbar input {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--card-soft);
+      color: var(--text);
+      border-radius: 12px;
+      padding: .62rem .8rem .62rem 2rem;
+      font-family: inherit;
+    }
+
+    .top-actions { display: flex; gap: .55rem; }
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--card-soft);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .content { padding: 1.2rem; }
+
+    /* Glass cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      box-shadow: var(--glass-shadow);
+      padding: 1rem;
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      position: relative;
+      overflow: hidden;
+      transition: transform .25s var(--ease-out), box-shadow .25s var(--ease-out), border-color .25s var(--ease-out);
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(67,97,238,.18), transparent 55%),
+                  radial-gradient(900px 500px at 95% 0%, rgba(58,12,163,.14), transparent 55%);
+      opacity: .9;
+      pointer-events: none;
+      transition: opacity .25s var(--ease-out);
+    }
+    .card > * { position: relative; }
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(67,97,238,.35);
+    }
+
+
+    .btn {
+      border: 1px solid var(--border);
+      background: var(--card-soft);
+      color: var(--text);
+      border-radius: 10px;
+      padding: .58rem .9rem;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      gap: .45rem;
+      align-items: center;
+      font-weight: 600;
+      font-size: .84rem;
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      color: #fff;
+      border: 0;
+      position: relative;
+    }
+    .btn-primary::after{
+      content:'';
+      position:absolute;
+      inset:-2px;
+      background: radial-gradient(600px 60px at 10% 0%, rgba(255,255,255,.35), transparent 50%);
+      opacity: .45;
+      pointer-events:none;
+    }
+    .btn-danger { color: #fff; background: var(--accent-red); border-color: transparent; }
+
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 25px rgba(67,97,238,.18); }
+    .btn:active { transform: translateY(0); }
+
+
+    .form-control, select {
+      width: 100%;
+      padding: .62rem .72rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--card-soft);
+      color: var(--text);
+      font-family: inherit;
+    }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: .72rem .68rem; border-bottom: 1px solid var(--border); font-size: .85rem; text-align: left; }
+    th { color: var(--text-muted); font-weight: 700; font-size: .78rem; text-transform: uppercase; letter-spacing: .02em; }
+    tbody tr { transition: background .2s var(--ease-out); }
+    tbody tr:hover { background: var(--hover-bg); }
+
+    /* Responsive table (mobile card transform) */
+    @media (max-width: 768px) {
+      .responsive-table thead { display: none; }
+      .responsive-table, .responsive-table tbody, .responsive-table tr { display: block; width: 100%; }
+      .responsive-table tr { margin: .5rem 0; border-bottom: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+      .responsive-table td {
+        display: flex;
+        justify-content: space-between;
+        gap: .75rem;
+        padding: .7rem .8rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .responsive-table td:last-child { border-bottom: none; }
+      .responsive-table td::before {
+        content: attr(data-label);
+        color: var(--text-muted);
+        font-weight: 700;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .02em;
+      }
+    }
+
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      padding: .25rem .55rem;
+      border-radius: 999px;
+      font-size: .74rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+
+    .badge-green { color: #14532d; background: #dcfce7; border-color: #bbf7d0; }
+    .badge-amber { color: #7c2d12; background: #fef3c7; border-color: #fde68a; }
+    .badge-red { color: #7f1d1d; background: #fee2e2; border-color: #fecaca; }
+    .badge-blue { color: #1e3a8a; background: #dbeafe; border-color: #bfdbfe; }
+
+    html[data-theme="dark"] .badge-green { color: #bbf7d0; background: rgba(34,197,94,.16); border-color: rgba(34,197,94,.28); }
+    html[data-theme="dark"] .badge-amber { color: #fde68a; background: rgba(245,158,11,.16); border-color: rgba(245,158,11,.28); }
+    html[data-theme="dark"] .badge-red { color: #fecaca; background: rgba(239,68,68,.16); border-color: rgba(239,68,68,.28); }
+    html[data-theme="dark"] .badge-blue { color: #bfdbfe; background: rgba(67,97,238,.16); border-color: rgba(67,97,238,.28); }
+
+    .flash-wrap { display: grid; gap: .55rem; margin-bottom: 1rem; }
+    .flash {
+      border-radius: 10px;
+      padding: .65rem .75rem;
+      border: 1px solid var(--border);
+      font-size: .85rem;
+      background: var(--card);
+    }
+
+    .flash.success { border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.08); }
+    .flash.error { border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.08); }
+    .flash.info { border-color: rgba(67,97,238,.35); background: rgba(67,97,238,.08); }
+
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      padding: .45rem;
+      z-index: 30;
+      grid-template-columns: repeat(5, 1fr);
+      gap: .3rem;
+    }
+    .mobile-bottom-nav a {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: .7rem;
+      display: grid;
+      justify-items: center;
+      gap: .2rem;
+      padding: .3rem;
+      border-radius: 8px;
+    }
+    .mobile-bottom-nav a.active { background: rgba(67,97,238,.15); color: var(--accent-blue); }
+
+    .nav-section-title {
+      font-size: .68rem;
+      font-weight: 700;
+      color: var(--sidebar-muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin: 1.25rem .8rem .5rem;
+    }
+
+    .logout-wrap .nav-link {
+      color: var(--accent-red);
+      font-weight: 700;
+    }
+    .logout-wrap .nav-link:hover {
+      background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    /* Password eye fix */
+    .input-wrap i, .input-group i {
+      transition: color .2s ease;
+    }
+    html[data-theme="dark"] .input-wrap i, 
+    html[data-theme="dark"] .input-group i {
+      color: #fff !important;
+    }
+    .password-toggle {
+      cursor: pointer;
+      pointer-events: auto !important;
+    }
+
+    @media (max-width: 768px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { position: fixed; left: 0; transform: translateX(-101%); width: 240px; }
+      .sidebar.open { transform: translateX(0); }
+      .hamburger { display: inline-flex; align-items: center; justify-content: center; }
+      .topbar { grid-template-columns: auto 1fr auto; }
+      .searchbar { display: none; }
+      .content { padding: .95rem .95rem 5.25rem; }
+      .mobile-bottom-nav { display: grid; }
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="logo">
+        <i class="fa-solid fa-boxes-stacked"></i>
+        <span>Smart Inventory</span>
+      </div>
+
+      <div class="user-box">
+        <div class="avatar">{{ (current_user.full_name or 'U')[0]|upper }}</div>
+        <div class="user-meta">
+          <div class="name">{{ current_user.full_name }}</div>
+          <div class="role" style="color: var(--accent-blue); font-weight: 700;">{{ current_user.role|upper }}</div>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <div class="nav-section-title">Main Menu</div>
+        <a class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}" href="{{ url_for('dashboard.index') }}"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+        <a class="nav-link {% if request.endpoint == 'inventory.index' %}active{% endif %}" href="{{ url_for('inventory.index') }}"><i class="fa-solid fa-box-open"></i> Inventory</a>
+        <a class="nav-link {% if request.endpoint == 'inventory.recycle_bin' %}active{% endif %}" href="{{ url_for('inventory.recycle_bin') }}"><i class="fa-solid fa-trash-can-arrow-up"></i> Recycle Bin</a>
+        
+        <div class="nav-section-title">Operations</div>
+        <a class="nav-link {% if request.endpoint == 'sales.new_sale' %}active{% endif %}" href="{{ url_for('sales.new_sale') }}"><i class="fa-solid fa-cart-plus"></i> New Sale</a>
+        <a class="nav-link {% if request.endpoint == 'sales.index' or request.endpoint == 'sales.view_sale' %}active{% endif %}" href="{{ url_for('sales.index') }}"><i class="fa-solid fa-file-invoice"></i> Sales History</a>
+        
+        <div class="nav-section-title">Analytics</div>
+        <a class="nav-link {% if request.endpoint == 'reports.index' %}active{% endif %}" href="{{ url_for('reports.index') }}"><i class="fa-solid fa-chart-line"></i> Reports & AI</a>
+        
+        <div class="nav-section-title">Settings</div>
+        <a class="nav-link {% if request.endpoint == 'auth.profile' %}active{% endif %}" href="{{ url_for('auth.profile') }}"><i class="fa-solid fa-user-circle"></i> My Profile</a>
+        
+        {% if current_user.role == 'admin' %}
+          <div class="nav-section-title">Administration</div>
+          <a class="nav-link {% if request.endpoint == 'inventory.add_product' or request.endpoint == 'inventory.edit_product' %}active{% endif %}" href="{{ url_for('inventory.add_product') }}"><i class="fa-solid fa-plus"></i> Add Product</a>
+          <a class="nav-link {% if request.endpoint == 'inventory.suppliers' %}active{% endif %}" href="{{ url_for('inventory.suppliers') }}"><i class="fa-solid fa-truck"></i> Suppliers</a>
+          <a class="nav-link {% if request.endpoint == 'inventory.categories' %}active{% endif %}" href="{{ url_for('inventory.categories') }}"><i class="fa-solid fa-tags"></i> Categories</a>
+          <a class="nav-link {% if request.endpoint in ('auth.staff_list', 'auth.add_staff') %}active{% endif %}" href="{{ url_for('auth.staff_list') }}"><i class="fa-solid fa-users"></i> Manage Staff</a>
+        {% endif %}
+      </nav>
+
+      <div class="logout-wrap">
+        <a class="nav-link" href="{{ url_for('auth.logout') }}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="hamburger" id="hamburger"><i class="fa-solid fa-bars"></i></button>
+        <div class="title-wrap">
+          <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+          <p>{% block page_sub %}Welcome back{% endblock %}</p>
+        </div>
+
+        <form class="searchbar" action="{{ url_for('inventory.index') }}" method="GET">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" name="search" placeholder="Search products, SKUs..." value="{{ request.args.get('search', '') }}" />
+        </form>
+
+        <div class="top-actions">
+          <button type="button" id="themeToggle" class="icon-btn" title="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+          <button type="button" class="icon-btn" title="Notifications"><i class="fa-regular fa-bell"></i></button>
+          {% block topbar_actions %}{% endblock %}
+        </div>
+      </header>
+
+      <section class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-wrap">
+              {% for category, message in messages %}
+                <div class="flash {{ 'success' if category == 'success' else 'error' if category == 'error' else 'info' }} animate-in">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        <div class="page-animate" style="animation: floatIn .55s var(--ease-out) both;">
+          {% block content %}{% endblock %}
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <nav class="mobile-bottom-nav">
+    <a class="{% if request.endpoint == 'dashboard.index' %}active{% endif %}" href="{{ url_for('dashboard.index') }}"><i class="fa-solid fa-gauge"></i><span>Home</span></a>
+    <a class="{% if request.endpoint == 'inventory.index' %}active{% endif %}" href="{{ url_for('inventory.index') }}"><i class="fa-solid fa-box-open"></i><span>Inventory</span></a>
+    <a class="{% if request.endpoint == 'sales.new_sale' %}active{% endif %}" href="{{ url_for('sales.new_sale') }}"><i class="fa-solid fa-cart-plus"></i><span>Sale</span></a>
+    <a class="{% if request.endpoint == 'sales.index' %}active{% endif %}" href="{{ url_for('sales.index') }}"><i class="fa-solid fa-file-invoice"></i><span>Sales</span></a>
+    <a class="{% if request.endpoint == 'reports.index' %}active{% endif %}" href="{{ url_for('reports.index') }}"><i class="fa-solid fa-chart-line"></i><span>Reports</span></a>
+  </nav>
+
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+      const key = 'smartInventoryTheme';
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const saved = localStorage.getItem(key);
+      const initialTheme = saved || (prefersDark ? 'dark' : 'light');
+
+      function applyTheme(theme) {
+        root.setAttribute('data-theme', theme);
+        if (themeToggle) {
+          themeToggle.innerHTML = theme === 'dark'
+            ? '<i class="fa-solid fa-sun"></i>'
+            : '<i class="fa-solid fa-moon"></i>';
+        }
+      }
+
+      // Prevent flash of wrong theme
+      applyTheme(initialTheme);
+
+      if (themeToggle) {
+        themeToggle.addEventListener('click', function () {
+          const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+          localStorage.setItem(key, next);
+          applyTheme(next);
+        });
+      }
+
+
+      const sidebar = document.getElementById('sidebar');
+      const hamburger = document.getElementById('hamburger');
+      if (hamburger && sidebar) {
+        hamburger.addEventListener('click', function () {
+          sidebar.classList.toggle('open');
+        });
+      }
+
+      document.addEventListener('click', function (e) {
+        if (window.innerWidth > 768 || !sidebar || !hamburger) return;
+        if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+          sidebar.classList.remove('open');
+        }
+      });
+    })();
+
+    // Global Password Toggle
+    document.addEventListener('click', function(e) {
+      if (e.target.classList.contains('password-toggle')) {
+        const group = e.target.closest('.input-wrap, .input-group');
+        if (!group) return;
+        const input = group.querySelector('input[type="password"], input[type="text"]');
+        if (input) {
+          if (input.type === 'password') {
+            input.type = 'text';
+            e.target.classList.remove('fa-eye');
+            e.target.classList.add('fa-eye-slash');
+          } else {
+            input.type = 'password';
+            e.target.classList.remove('fa-eye-slash');
+            e.target.classList.add('fa-eye');
+          }
+        }
+      }
+    });
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

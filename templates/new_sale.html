@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+{% block title %}New Sale | Smart Inventory{% endblock %}
+{% block page_title %}New Sale{% endblock %}
+{% block page_sub %}Create invoice from product catalog{% endblock %}
+
+{% block extra_css %}
+<style>
+  .sale-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  .product-search-wrap {
+    position: relative;
+    margin-bottom: 1.25rem;
+  }
+
+  .product-search-wrap i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+  }
+
+  .product-search-wrap input {
+    padding-left: 2.5rem;
+    height: 48px;
+    font-size: 1rem;
+  }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .product-tile {
+    padding: 1rem;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 140px;
+  }
+
+  .product-tile:hover {
+    border-color: var(--accent-blue);
+    background: var(--hover-bg);
+  }
+
+  .product-tile h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text);
+  }
+
+  .product-tile .meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .product-tile .price {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--accent-blue);
+  }
+
+  .cart-container {
+    position: sticky;
+    top: 5rem;
+  }
+
+  .cart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .cart-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: var(--card-soft);
+    border: 1px solid var(--border);
+    margin-bottom: 0.75rem;
+  }
+
+  .cart-item-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .cart-item-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .cart-item-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .qty-input {
+    width: 80px !important;
+    height: 32px !important;
+    padding: 0 0.5rem !important;
+    font-size: 0.85rem !important;
+    text-align: center;
+  }
+
+  .cart-summary {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border);
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .summary-total {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-top: 0.5rem;
+  }
+
+  @media (max-width: 1100px) {
+    .sale-layout { grid-template-columns: 1fr; }
+    .cart-container { position: static; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="POST" id="saleForm">
+  <div class="sale-layout">
+    <div class="card animate-in">
+      <div class="product-search-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="searchProducts" class="form-control" placeholder="Search by product name or SKU..." autocomplete="off">
+      </div>
+
+      <div class="product-grid" id="productGrid">
+        {% for p in products %}
+          <div class="card product-tile animate-in" 
+               data-id="{{ p.id }}" 
+               data-name="{{ p.name|lower }}" 
+               data-sku="{{ p.sku|lower }}" 
+               data-price="{{ p.price }}" 
+               data-qty="{{ p.quantity }}"
+               style="animation-delay: {{ loop.index0 * 0.02 }}s">
+            <div>
+              <h4>{{ p.name }}</h4>
+              <div class="meta">
+                <span>SKU: {{ p.sku }}</span> • 
+                <span class="{{ 'badge-red' if p.quantity <= p.reorder_level else 'badge-green' }}" style="padding: 0 4px; font-size: 10px; border-radius: 4px;">{{ p.quantity }} {{ p.unit }}</span>
+              </div>
+            </div>
+            <div class="price">₹{{ '%.2f'|format(p.price) }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="cart-container animate-in" style="animation-delay: 0.2s">
+      <div class="card">
+        <div class="cart-header">
+          <h3><i class="fa-solid fa-cart-shopping" style="color: var(--accent-blue)"></i> Cart</h3>
+          <span id="itemCount" class="badge badge-blue">0 Items</span>
+        </div>
+
+        <div id="cartItems" style="max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
+          <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+            <i class="fa-solid fa-cart-arrow-down" style="font-size: 2rem; opacity: 0.2; display: block; margin-bottom: 1rem;"></i>
+            Cart is empty. Select products to begin.
+          </div>
+        </div>
+
+        <div id="hiddenInputs"></div>
+
+        <div class="cart-summary">
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span id="subTotal">₹0.00</span>
+          </div>
+          <div class="summary-row">
+            <span>Tax (GST 0%)</span>
+            <span>₹0.00</span>
+          </div>
+          <div class="summary-row summary-total">
+            <span>Total</span>
+            <span id="grandTotal">₹0.00</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" style="width: 100%; height: 48px; justify-content: center; margin-top: 1.5rem;" type="submit" id="submitSale" disabled>
+          <i class="fa-solid fa-check-double"></i> Complete Transaction
+        </button>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const cart = {};
+
+  function addToCart(id, name, price, maxQty) {
+    if (maxQty <= 0) {
+      alert('Product out of stock!');
+      return;
+    }
+    if (!cart[id]) cart[id] = { name, price, qty: 1, maxQty };
+    else cart[id].qty = Math.min(cart[id].qty + 1, maxQty);
+    renderCart();
+  }
+
+  function changeQty(id, qty) {
+    const value = Math.max(1, Math.min(parseInt(qty || '1', 10), cart[id].maxQty));
+    cart[id].qty = value;
+    renderCart();
+  }
+
+  function removeItem(id) {
+    delete cart[id];
+    renderCart();
+  }
+
+  function renderCart() {
+    const container = document.getElementById('cartItems');
+    const hidden = document.getElementById('hiddenInputs');
+    const submitBtn = document.getElementById('submitSale');
+    const keys = Object.keys(cart);
+
+    if (!keys.length) {
+      container.innerHTML = `<div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);"><i class="fa-solid fa-cart-arrow-down" style="font-size: 2rem; opacity: 0.2; display: block; margin-bottom: 1rem;"></i>Cart is empty. Select products to begin.</div>`;
+      hidden.innerHTML = '';
+      document.getElementById('grandTotal').textContent = '₹0.00';
+      document.getElementById('subTotal').textContent = '₹0.00';
+      document.getElementById('itemCount').textContent = '0 Items';
+      submitBtn.disabled = true;
+      return;
+    }
+
+    let html = '';
+    let hiddenHtml = '';
+    let total = 0;
+    let count = 0;
+
+    keys.forEach((id) => {
+      const item = cart[id];
+      const subtotal = item.price * item.qty;
+      total += subtotal;
+      count += item.qty;
+      html += `
+        <div class="cart-item">
+          <div class="cart-item-top">
+            <span class="cart-item-name">${item.name}</span>
+            <button type="button" class="btn" style="padding: 4px 8px; border: 0; color: var(--accent-red);" onclick="removeItem(${id})"><i class="fa-solid fa-trash-can"></i></button>
+          </div>
+          <div class="cart-item-actions">
+            <input type="number" class="form-control qty-input" min="1" max="${item.maxQty}" value="${item.qty}" onchange="changeQty(${id}, this.value)">
+            <span style="font-weight: 700; color: var(--text);">₹${subtotal.toFixed(2)}</span>
+          </div>
+        </div>`;
+      hiddenHtml += `<input type="hidden" name="product_id[]" value="${id}"><input type="hidden" name="quantity[]" value="${item.qty}">`;
+    });
+
+    container.innerHTML = html;
+    hidden.innerHTML = hiddenHtml;
+    const totalStr = `₹${total.toFixed(2)}`;
+    document.getElementById('grandTotal').textContent = totalStr;
+    document.getElementById('subTotal').textContent = totalStr;
+    document.getElementById('itemCount').textContent = `${count} Items`;
+    submitBtn.disabled = false;
+  }
+
+  document.getElementById('searchProducts').addEventListener('input', function () {
+    const q = this.value.toLowerCase().trim();
+    document.querySelectorAll('.product-tile').forEach(tile => {
+      const visible = !q || tile.dataset.name.includes(q) || tile.dataset.sku.includes(q);
+      tile.style.display = visible ? 'flex' : 'none';
+    });
+  });
+
+  document.querySelectorAll('.product-tile').forEach(tile => {
+    tile.addEventListener('click', function () {
+      addToCart(
+        parseInt(tile.dataset.id, 10),
+        tile.querySelector('h4').textContent,
+        parseFloat(tile.dataset.price),
+        parseInt(tile.dataset.qty, 10)
+      );
+    });
+  });
+</script>
+{% endblock %}
+

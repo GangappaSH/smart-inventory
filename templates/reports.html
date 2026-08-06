@@ -1,0 +1,515 @@
+{% extends "base.html" %}
+{% block title %}Reports & AI | Smart Inventory{% endblock %}
+{% block page_title %}Intelligence & Reports{% endblock %}
+{% block page_sub %}Advanced sales analytics and demand forecasting{% endblock %}
+
+{% block extra_css %}
+<style>
+  .report-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .ai-strip {
+    background: linear-gradient(135deg, rgba(67,97,238,.15), rgba(58,12,163,.15));
+    border: 1px solid var(--accent-blue);
+    padding: 1rem 1.25rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .ai-strip > i { font-size: 1.5rem; color: var(--accent-blue); }
+  .ai-strip-text { flex: 1; }
+  .ai-strip-text h4 { margin: 0; font-size: .95rem; font-weight: 700; }
+  .ai-strip-text p  { margin: .15rem 0 0; font-size: .8rem; color: var(--text-muted); }
+
+  .chart-card { min-height: 400px; }
+
+  .widget-select {
+    width: auto;
+    padding: .35rem .6rem;
+    font-size: .8rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card-soft);
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .ai-controls {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .ai-table-loading {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--text-muted);
+    font-size: .88rem;
+  }
+
+  /* pulse for critical badge */
+  @keyframes pulseCritical {
+    0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.4); }
+    50%      { box-shadow: 0 0 0 6px rgba(239,68,68,.0); }
+  }
+  .badge-pulse-red   { animation: pulseCritical 1.5s infinite; }
+
+  @keyframes pulseAmber {
+    0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,.4); }
+    50%      { box-shadow: 0 0 0 6px rgba(245,158,11,.0); }
+  }
+  .badge-pulse-amber { animation: pulseAmber 2s infinite; }
+
+  @media (max-width: 1024px) { .report-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ── AI banner ─────────────────────────────────────────────────────────── -->
+<div class="ai-strip animate-in">
+  <i class="fa-solid fa-wand-magic-sparkles"></i>
+  <div class="ai-strip-text">
+    <h4>AI-Powered Demand Forecasting Active</h4>
+    <p>Linear Regression over configurable history windows — stock optimisation + category revenue outlook.</p>
+  </div>
+  <span class="badge badge-blue">V2.0 Stable</span>
+</div>
+
+<!-- ── Monthly Sales Volume ───────────────────────────────────────────────── -->
+<div class="card chart-card animate-in" style="margin-bottom:1.5rem;animation-delay:.1s;">
+  <div class="card-header">
+    <h3><i class="fa-solid fa-chart-column" style="color:var(--accent-blue)"></i> Monthly Sales Volume</h3>
+    <span class="badge badge-blue">Last 6 Months</span>
+  </div>
+  <div style="height:320px;position:relative;">
+    <canvas id="monthlySales"></canvas>
+  </div>
+</div>
+
+<!-- ── Revenue by Category  +  Top Revenue Generators ───────────────────── -->
+<div class="report-grid">
+
+  <div class="card animate-in" style="animation-delay:.2s;">
+    <div class="card-header">
+      <h3><i class="fa-solid fa-layer-group" style="color:var(--accent-purple)"></i> Revenue by Category</h3>
+      <select class="widget-select range-select" data-target="category-revenue">
+        <option value="today">Today</option>
+        <option value="yesterday">Yesterday</option>
+        <option value="this_week">This Week</option>
+        <option value="this_month" selected>This Month</option>
+        <option value="all">All Time</option>
+      </select>
+    </div>
+    <div style="height:320px;position:relative;">
+      <canvas id="categorySales"></canvas>
+    </div>
+  </div>
+
+  <div class="card animate-in" style="animation-delay:.25s;padding:0;">
+    <div class="card-header" style="padding:1.25rem;">
+      <h3><i class="fa-solid fa-fire-flame-curved" style="color:var(--accent-red)"></i> Top Revenue Generators</h3>
+      <select class="widget-select range-select" data-target="top-revenue">
+        <option value="today">Today</option>
+        <option value="yesterday">Yesterday</option>
+        <option value="this_week">This Week</option>
+        <option value="this_month" selected>This Month</option>
+        <option value="all">All Time</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table class="responsive-table">
+        <thead>
+          <tr><th>Product</th><th>Revenue</th></tr>
+        </thead>
+        <tbody id="top-revenue-body">
+          {% for p in top_products %}
+          <tr>
+            <td data-label="Product">
+              <div style="font-weight:600;">{{ p.name }}</div>
+              <div style="font-size:.72rem;color:var(--text-muted);">{{ p.qty }} units sold</div>
+            </td>
+            <td data-label="Revenue" style="font-weight:700;color:var(--accent-blue);">
+              ₹{{ '%.2f'|format(p.revenue) }}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="2" style="text-align:center;padding:2rem;color:var(--text-muted);">No data for this period.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── AI Category Revenue Forecast ──────────────────────────────────────── -->
+<div class="card animate-in" style="animation-delay:.28s;padding:0;margin-bottom:1.5rem;">
+  <div class="card-header" style="padding:1.25rem;">
+    <h3><i class="fa-solid fa-brain" style="color:var(--accent-purple)"></i> AI Category Revenue Forecast (Next 7 Days)</h3>
+    <div class="ai-controls">
+      <span style="font-size:.8rem;color:var(--text-muted);">Training data:</span>
+      <select class="widget-select" id="ai-category-training-select">
+        <option value="15">Last 15 Days</option>
+        <option value="30" selected>Last 30 Days</option>
+        <option value="60">Last 60 Days</option>
+        <option value="90">Last 90 Days</option>
+      </select>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="responsive-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Avg Daily Revenue</th>
+          <th>Forecast (7 Days)</th>
+          <th>Growth Trend</th>
+        </tr>
+      </thead>
+      <tbody id="ai-category-predictions-body">
+        {% for cp in category_predictions %}
+        <tr>
+          <td data-label="Category" style="font-weight:600;">{{ cp.category_name }}</td>
+          <td data-label="Avg Daily Revenue" style="color:var(--text-muted);">
+            ₹{{ '%.2f'|format(cp.avg_daily_revenue) }}&thinsp;/ day
+          </td>
+          <td data-label="Forecast (7 Days)" style="font-weight:700;color:var(--accent-blue);">
+            ₹{{ '%.2f'|format(cp.predicted_7days_revenue) }}
+          </td>
+          <td data-label="Growth Trend">
+            {% if cp.trend == 'up' %}
+              <span class="badge badge-green"><i class="fa-solid fa-arrow-trend-up"></i> Rising</span>
+            {% elif cp.trend == 'down' %}
+              <span class="badge badge-red"><i class="fa-solid fa-arrow-trend-down"></i> Declining</span>
+            {% else %}
+              <span class="badge badge-blue"><i class="fa-solid fa-arrow-right"></i> Stable</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" class="ai-table-loading">
+            <i class="fa-solid fa-brain" style="font-size:2rem;opacity:.12;display:block;margin-bottom:.75rem;"></i>
+            Not enough sales history to forecast category revenue.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── AI Demand Prediction (per product) ────────────────────────────────── -->
+<div class="card animate-in" style="animation-delay:.3s;padding:0;margin-bottom:1.5rem;">
+  <div class="card-header" style="padding:1.25rem;">
+    <h3><i class="fa-solid fa-robot" style="color:var(--accent-blue)"></i> AI Demand Prediction (Next 7 Days)</h3>
+    <div class="ai-controls">
+      <select class="widget-select" id="ai-category-select">
+        <option value="">All Categories</option>
+        {% for cat in categories %}
+        <option value="{{ cat.id }}">{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+      <select class="widget-select" id="ai-training-select">
+        <option value="15">Last 15 Days</option>
+        <option value="30" selected>Last 30 Days</option>
+        <option value="60">Last 60 Days</option>
+        <option value="90">Last 90 Days</option>
+      </select>
+      <span class="badge badge-green"><i class="fa-solid fa-microchip"></i> AI Active</span>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="responsive-table">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Stock / Reorder Lvl</th>
+          <th>Avg / Day</th>
+          <th>Forecast (7d)</th>
+          <th>Trend</th>
+          <th>Smart Action</th>
+        </tr>
+      </thead>
+      <tbody id="ai-predictions-body">
+        {% for p in predictions %}
+        <tr>
+          <td data-label="Product">
+            <div style="font-weight:600;">{{ p.product }}</div>
+            <div style="font-size:.72rem;color:var(--text-muted);">SKU: {{ p.sku }}</div>
+          </td>
+          <td data-label="Stock / Reorder Lvl">
+            <span style="font-weight:700;{% if p.current_stock <= p.reorder_level %}color:var(--accent-red);{% endif %}">
+              {{ p.current_stock }}
+            </span>
+            <span style="color:var(--text-muted);font-size:.8rem;"> / {{ p.reorder_level }}</span>
+          </td>
+          <td data-label="Avg / Day" style="color:var(--text-muted);">{{ p.avg_daily }}&thinsp;/ day</td>
+          <td data-label="Forecast (7d)" style="font-weight:700;color:var(--accent-blue);">
+            {{ p.predicted_7days }} units
+          </td>
+          <td data-label="Trend">
+            {% if p.trend == 'up' %}
+              <span class="badge badge-green"><i class="fa-solid fa-arrow-trend-up"></i> Rising</span>
+            {% elif p.trend == 'down' %}
+              <span class="badge badge-red"><i class="fa-solid fa-arrow-trend-down"></i> Declining</span>
+            {% else %}
+              <span class="badge badge-blue"><i class="fa-solid fa-arrow-right"></i> Stable</span>
+            {% endif %}
+          </td>
+          <td data-label="Smart Action">
+            {% if p.stock_critical %}
+              <span class="badge badge-red badge-pulse-red">
+                <i class="fa-solid fa-triangle-exclamation"></i> Stock Critical
+              </span>
+            {% elif p.reorder_suggested %}
+              <span class="badge badge-amber badge-pulse-amber">
+                <i class="fa-solid fa-cart-shopping"></i> Reorder Now
+              </span>
+            {% else %}
+              <span class="badge badge-green">
+                <i class="fa-solid fa-check"></i> Optimised
+              </span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="ai-table-loading">
+            <i class="fa-solid fa-microchip" style="font-size:2.5rem;opacity:.1;display:block;margin-bottom:1rem;"></i>
+            Gathering more sales data to generate accurate AI forecasts.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+/* ── theme tokens ──────────────────────────────────────────────────────── */
+const isDark     = document.documentElement.getAttribute('data-theme') === 'dark';
+const textColor  = isDark ? '#9ba7b4' : '#64748b';
+const borderClr  = isDark ? '#21262d' : '#e2e8f0';
+const tooltipBg  = isDark ? '#161b22' : '#ffffff';
+const tooltipTxt = isDark ? '#ffffff' : '#0f172a';
+
+Chart.defaults.color       = textColor;
+Chart.defaults.borderColor = borderClr;
+Chart.defaults.font.family = "'Inter', sans-serif";
+
+/* ── Monthly Sales bar chart (static) ─────────────────────────────────── */
+new Chart(document.getElementById('monthlySales'), {
+  type: 'bar',
+  data: {
+    labels: {{ monthly|map(attribute='month')|list|tojson }},
+    datasets: [{
+      label: 'Revenue',
+      data: {{ monthly|map(attribute='amount')|list|tojson }},
+      backgroundColor: '#4361ee',
+      hoverBackgroundColor: '#3a0ca3',
+      borderRadius: 10,
+      maxBarThickness: 45
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: tooltipBg,
+        titleColor: tooltipTxt,
+        bodyColor: textColor,
+        borderColor: borderClr, borderWidth: 1, padding: 12,
+        callbacks: { label: ctx => `₹${ctx.parsed.y.toLocaleString('en-IN')}` }
+      }
+    },
+    scales: {
+      y: { beginAtZero: true, ticks: { callback: v => `₹${(v/1000).toFixed(0)}k` } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+/* ── Category doughnut chart (dynamic) ────────────────────────────────── */
+const categorySalesChart = new Chart(document.getElementById('categorySales'), {
+  type: 'doughnut',
+  data: {
+    labels: {{ cat_sales|map(attribute='name')|list|tojson }},
+    datasets: [{
+      data: {{ cat_sales|map(attribute='revenue')|list|tojson }},
+      backgroundColor: ['#4361ee','#3a0ca3','#22c55e','#f59e0b','#ef4444','#60a5fa'],
+      borderWidth: 0, hoverOffset: 20
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '65%',
+    plugins: {
+      legend: { position: 'bottom', labels: { padding: 25, usePointStyle: true } },
+      tooltip: { callbacks: { label: ctx => ` ₹${ctx.parsed.toLocaleString('en-IN')}` } }
+    }
+  }
+});
+
+/* ── Badge helpers ────────────────────────────────────────────────────── */
+function trendBadge(trend) {
+  if (trend === 'up')
+    return '<span class="badge badge-green"><i class="fa-solid fa-arrow-trend-up"></i> Rising</span>';
+  if (trend === 'down')
+    return '<span class="badge badge-red"><i class="fa-solid fa-arrow-trend-down"></i> Declining</span>';
+  return '<span class="badge badge-blue"><i class="fa-solid fa-arrow-right"></i> Stable</span>';
+}
+
+function smartActionBadge(p) {
+  if (p.stock_critical)
+    return '<span class="badge badge-red badge-pulse-red"><i class="fa-solid fa-triangle-exclamation"></i> Stock Critical</span>';
+  if (p.reorder_suggested)
+    return '<span class="badge badge-amber badge-pulse-amber"><i class="fa-solid fa-cart-shopping"></i> Reorder Now</span>';
+  return '<span class="badge badge-green"><i class="fa-solid fa-check"></i> Optimised</span>';
+}
+
+/* ── Range-select AJAX (Category Revenue + Top Revenue) ──────────────── */
+document.querySelectorAll('.range-select').forEach(sel => {
+  sel.addEventListener('change', function () {
+    const target = this.dataset.target;
+    const range  = this.value;
+
+    fetch(`/reports/api/${target}?range=${range}`)
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then(data => {
+        if (target === 'category-revenue') {
+          categorySalesChart.data.labels               = data.map(d => d.name);
+          categorySalesChart.data.datasets[0].data     = data.map(d => d.revenue);
+          categorySalesChart.update();
+
+        } else if (target === 'top-revenue') {
+          const tbody = document.getElementById('top-revenue-body');
+          tbody.innerHTML = data.length === 0
+            ? '<tr><td colspan="2" style="text-align:center;padding:2rem;color:var(--text-muted);">No data for this period.</td></tr>'
+            : data.map(p => `
+                <tr>
+                  <td data-label="Product">
+                    <div style="font-weight:600;">${p.name}</div>
+                    <div style="font-size:.72rem;color:var(--text-muted);">${p.qty} units sold</div>
+                  </td>
+                  <td data-label="Revenue" style="font-weight:700;color:var(--accent-blue);">₹${p.revenue.toFixed(2)}</td>
+                </tr>`).join('');
+        }
+      })
+      .catch(err => console.error('[Range select error]', err));
+  });
+});
+
+/* ── AI Demand Prediction AJAX ────────────────────────────────────────── */
+const aiCatSel      = document.getElementById('ai-category-select');
+const aiTrainSel    = document.getElementById('ai-training-select');
+const aiPredBody    = document.getElementById('ai-predictions-body');
+
+function loadingRow(cols, msg) {
+  return `<tr><td colspan="${cols}" class="ai-table-loading">${msg}</td></tr>`;
+}
+
+function fetchAiPredictions() {
+  const catId = aiCatSel.value;
+  const days  = aiTrainSel.value;
+  aiPredBody.innerHTML = loadingRow(6, '<i class="fa-solid fa-spinner fa-spin"></i>&ensp;Computing forecasts…');
+
+  fetch(`/reports/api/predictions?category_id=${catId}&training_days=${days}`)
+    .then(r => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    })
+    .then(data => {
+      if (data.length === 0) {
+        aiPredBody.innerHTML = loadingRow(6,
+          '<i class="fa-solid fa-microchip" style="font-size:2rem;opacity:.1;display:block;margin-bottom:.75rem;"></i>' +
+          'No products with sufficient sales history in this filter.'
+        );
+        return;
+      }
+      aiPredBody.innerHTML = data.map(p => {
+        const stockStyle = p.current_stock <= p.reorder_level
+          ? 'font-weight:700;color:var(--accent-red);'
+          : 'font-weight:700;';
+        return `
+          <tr>
+            <td data-label="Product">
+              <div style="font-weight:600;">${p.product}</div>
+              <div style="font-size:.72rem;color:var(--text-muted);">SKU: ${p.sku}</div>
+            </td>
+            <td data-label="Stock / Reorder Lvl">
+              <span style="${stockStyle}">${p.current_stock}</span>
+              <span style="color:var(--text-muted);font-size:.8rem;"> / ${p.reorder_level}</span>
+            </td>
+            <td data-label="Avg / Day" style="color:var(--text-muted);">${p.avg_daily}&thinsp;/ day</td>
+            <td data-label="Forecast (7d)" style="font-weight:700;color:var(--accent-blue);">${p.predicted_7days} units</td>
+            <td data-label="Trend">${trendBadge(p.trend)}</td>
+            <td data-label="Smart Action">${smartActionBadge(p)}</td>
+          </tr>`;
+      }).join('');
+    })
+    .catch(err => {
+      aiPredBody.innerHTML = loadingRow(6, '⚠️ Failed to load forecast. Check server logs.');
+      console.error('[AI Predictions error]', err);
+    });
+}
+
+aiCatSel.addEventListener('change',   fetchAiPredictions);
+aiTrainSel.addEventListener('change', fetchAiPredictions);
+
+/* ── AI Category Revenue Forecast AJAX ───────────────────────────────── */
+const aiCatTrainSel = document.getElementById('ai-category-training-select');
+const aiCatPredBody = document.getElementById('ai-category-predictions-body');
+
+function fetchAiCategoryPredictions() {
+  const days = aiCatTrainSel.value;
+  aiCatPredBody.innerHTML = loadingRow(4, '<i class="fa-solid fa-spinner fa-spin"></i>&ensp;Computing category forecasts…');
+
+  fetch(`/reports/api/category-predictions?training_days=${days}`)
+    .then(r => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    })
+    .then(data => {
+      if (data.length === 0) {
+        aiCatPredBody.innerHTML = loadingRow(4,
+          '<i class="fa-solid fa-brain" style="font-size:2rem;opacity:.12;display:block;margin-bottom:.75rem;"></i>' +
+          'Not enough sales history to forecast category revenue.'
+        );
+        return;
+      }
+      aiCatPredBody.innerHTML = data.map(cp => `
+        <tr>
+          <td data-label="Category" style="font-weight:600;">${cp.category_name}</td>
+          <td data-label="Avg Daily Revenue" style="color:var(--text-muted);">₹${cp.avg_daily_revenue.toFixed(2)}&thinsp;/ day</td>
+          <td data-label="Forecast (7 Days)" style="font-weight:700;color:var(--accent-blue);">₹${cp.predicted_7days_revenue.toFixed(2)}</td>
+          <td data-label="Growth Trend">${trendBadge(cp.trend)}</td>
+        </tr>`).join('');
+    })
+    .catch(err => {
+      aiCatPredBody.innerHTML = loadingRow(4, '⚠️ Failed to load category forecast. Check server logs.');
+      console.error('[Category AI Predictions error]', err);
+    });
+}
+
+aiCatTrainSel.addEventListener('change', fetchAiCategoryPredictions);
+</script>
+{% endblock %}

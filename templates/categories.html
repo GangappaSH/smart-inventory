@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Categories | Smart Inventory{% endblock %}
+{% block page_title %}Categories{% endblock %}
+{% block page_sub %}Organize your products by department{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+  <!-- Add Category Card -->
+  <div class="card animate-in" style="margin-bottom: 1.5rem;">
+    <div class="card-header" style="border: 0; margin-bottom: 1rem; padding-bottom: 0;">
+      <h3><i class="fa-solid fa-plus-circle" style="color: var(--accent-blue)"></i> Add New Category</h3>
+    </div>
+    <form method="POST" action="{{ url_for('inventory.add_category') }}" style="display: flex; gap: 1rem; align-items: flex-end;">
+      <div style="flex: 1;">
+        <label class="badge-blue" style="display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; border-radius: 4px; padding: 2px 6px; width: fit-content;">Category Name *</label>
+        <input type="text" name="name" required placeholder="e.g. Electronics, Home & Kitchen..." class="form-control">
+      </div>
+      <button type="submit" class="btn btn-primary" style="height: 42px;">
+        <i class="fa-solid fa-plus"></i> Add Category
+      </button>
+    </form>
+  </div>
+
+  <!-- Categories List -->
+  <div class="card animate-in" style="animation-delay: 0.1s; padding: 0;">
+    <div class="card-header" style="padding: 1.25rem; border-bottom: 1px solid var(--border);">
+      <h3><i class="fa-solid fa-tags" style="color: var(--accent-purple)"></i> Product Categories</h3>
+      <span class="badge badge-blue">{{ categories|length }} Total</span>
+    </div>
+    
+    <div class="table-wrap">
+      <table class="responsive-table">
+        <thead>
+          <tr>
+            <th style="width: 60px;">#</th>
+            <th>Category Details</th>
+            <th style="text-align: center;">Linked Products</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in categories %}
+            <tr>
+              <td data-label="#">{{ loop.index }}</td>
+              
+              <!-- View Mode -->
+              <td data-label="Category" class="view-c-{{ c.id }}">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <div class="badge-blue" style="width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px;">
+                    <i class="fa-solid fa-tag" style="font-size: 0.85rem;"></i>
+                  </div>
+                  <span style="font-weight: 700; color: var(--text);">{{ c.name }}</span>
+                </div>
+              </td>
+
+              <!-- Edit Mode (Hidden) -->
+              <td class="edit-c-{{ c.id }} hide" data-label="Rename Category">
+                <form method="POST" action="{{ url_for('inventory.edit_category', id=c.id) }}" style="display: flex; gap: 0.5rem; align-items: center;">
+                  <input type="text" name="name" value="{{ c.name }}" required class="form-control" style="flex: 1;">
+                  <button type="submit" class="btn btn-primary" style="padding: 0.5rem;"><i class="fa-solid fa-save"></i></button>
+                  <button type="button" onclick="cancelEdit({{ c.id }})" class="btn" style="padding: 0.5rem;"><i class="fa-solid fa-xmark"></i></button>
+                </form>
+              </td>
+
+              <td data-label="Products" style="text-align: center;">
+                <span class="badge badge-purple" style="border-radius: 6px; font-weight: 700; background: rgba(139, 92, 246, 0.15); color: #a78bfa;">{{ c.products|length }} Products</span>
+              </td>
+
+              <td data-label="Actions" style="text-align: right;">
+                <div class="view-c-{{ c.id }}" style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                  <button onclick="startEdit({{ c.id }})" class="btn" title="Rename">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                  </button>
+                  {% if not c.products %}
+                    <form method="POST" action="{{ url_for('inventory.delete_category', id=c.id) }}" onsubmit="return confirm('Delete category {{ c.name }}?')">
+                      <button type="submit" class="btn btn-danger" title="Delete">
+                        <i class="fa-solid fa-trash-can"></i>
+                      </button>
+                    </form>
+                  {% else %}
+                    <span class="badge" style="font-size: 0.65rem; opacity: 0.5;">In Use</span>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="4" style="text-align: center; padding: 4rem 2rem; color: var(--text-muted);">
+                <div style="font-size: 3rem; opacity: 0.15; margin-bottom: 1rem;"><i class="fa-solid fa-layer-group"></i></div>
+                <div style="font-weight: 600;">No categories defined</div>
+                <p style="font-size: 0.85rem; margin-top: 0.5rem;">Group your inventory items by adding your first category above.</p>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function startEdit(id) {
+  document.querySelectorAll('.view-c-' + id).forEach(el => el.classList.add('hide'));
+  document.querySelectorAll('.edit-c-' + id).forEach(el => el.classList.remove('hide'));
+}
+function cancelEdit(id) {
+  document.querySelectorAll('.view-c-' + id).forEach(el => el.classList.remove('hide'));
+  document.querySelectorAll('.edit-c-' + id).forEach(el => el.classList.add('hide'));
+}
+</script>
+{% endblock %}
+

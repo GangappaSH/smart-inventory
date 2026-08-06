@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Inventory | Smart Inventory{% endblock %}
+{% block page_title %}Inventory{% endblock %}
+{% block page_sub %}Manage products and stock levels{% endblock %}
+
+{% block topbar_actions %}
+  {% if current_user.role == 'admin' %}
+    <a class="btn btn-primary" href="{{ url_for('inventory.add_product') }}">
+      <i class="fa-solid fa-plus"></i> 
+      <span>Add Product</span>
+    </a>
+    <a class="btn btn-secondary" href="{{ url_for('inventory.recycle_bin') }}">
+      <i class="fa-solid fa-trash-can-arrow-up"></i>
+      <span>Recycle Bin</span>
+    </a>
+  {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .filter-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 1rem;
+    align-items: flex-end;
+  }
+  
+  .filter-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .stock-count {
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .unit-tag {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-left: 0.25rem;
+  }
+
+  @media (max-width: 768px) {
+    .filter-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card animate-in" style="margin-bottom: 1.5rem;">
+  <form method="GET" class="filter-grid">
+    <div>
+      <label class="filter-label">Search Products</label>
+      <div style="position: relative;">
+        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.8rem;"></i>
+        <input class="form-control" name="search" value="{{ search }}" placeholder="Name, SKU, or ID..." style="padding-left: 2.2rem;" />
+      </div>
+    </div>
+    <div>
+      <label class="filter-label">Category</label>
+      <select name="category" class="form-control">
+        <option value="">All Categories</option>
+        {% for c in categories %}
+          <option value="{{ c.id }}" {% if selected_cat == c.id|string %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+      <button class="btn btn-primary" type="submit"><i class="fa-solid fa-filter"></i> Filter</button>
+      <a class="btn" href="{{ url_for('inventory.index') }}"><i class="fa-solid fa-rotate-right"></i> Reset</a>
+    </div>
+  </form>
+</div>
+
+<div class="card animate-in" style="animation-delay: 0.1s; padding: 0;">
+  <div class="table-wrap">
+    <table class="responsive-table">
+      <thead>
+        <tr>
+          <th>Product ID</th>
+          <th>Product Details</th>
+          <th>Category</th>
+          <th>Pricing</th>
+          <th>Stock Level</th>
+          <th>Status</th>
+          {% if current_user.role == 'admin' %}<th>Actions</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+          <tr>
+            <td data-label="Product ID" style="font-family: monospace; font-weight: 600; color: var(--text-muted);">PRD{{ '%04d'|format(p.id) }}</td>
+            <td data-label="Product Details">
+              <div style="font-weight: 600; color: var(--text);">{{ p.name }}</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">SKU: {{ p.sku }}</div>
+            </td>
+            <td data-label="Category">
+              <span class="badge badge-blue" style="border-radius: 6px;">{{ p.category.name }}</span>
+            </td>
+            <td data-label="Pricing">
+              <div style="font-weight: 800; color: var(--accent-blue);" title="Price with {{ p.gst_rate }}% GST">₹{{ '%.2f'|format(p.total_price) }}</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Base: ₹{{ '%.2f'|format(p.price) }} (+{{ p.gst_rate }}% GST)</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Cost: ₹{{ '%.2f'|format(p.cost_price) }}</div>
+            </td>
+            <td data-label="Stock Level">
+              <span class="stock-count">{{ p.quantity }}</span>
+              <span class="unit-tag">{{ p.unit }}</span>
+            </td>
+            <td data-label="Status">
+              {% if p.quantity == 0 %}
+                <span class="badge badge-red"><i class="fa-solid fa-circle-xmark"></i> Out of Stock</span>
+              {% elif p.quantity <= p.reorder_level %}
+                <span class="badge badge-amber"><i class="fa-solid fa-triangle-exclamation"></i> Low Stock</span>
+              {% else %}
+                <span class="badge badge-green"><i class="fa-solid fa-circle-check"></i> In Stock</span>
+              {% endif %}
+            </td>
+            {% if current_user.role == 'admin' %}
+            <td data-label="Actions">
+              <div style="display: flex; gap: 0.5rem;">
+                <a class="btn" href="{{ url_for('inventory.edit_product', id=p.id) }}" title="Edit"><i class="fa-solid fa-pen-to-square"></i></a>
+                <form method="POST" action="{{ url_for('inventory.delete_product', id=p.id) }}" onsubmit="return confirm('Delete this product?')" style="display: inline;">
+                  <button class="btn btn-danger" type="submit" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
+                </form>
+              </div>
+            </td>
+            {% endif %}
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 4rem 2rem; color: var(--text-muted);">
+              <div style="font-size: 3rem; opacity: 0.15; margin-bottom: 1rem;"><i class="fa-solid fa-box-open"></i></div>
+              <div style="font-weight: 600;">No products found</div>
+              <div style="font-size: 0.85rem;">Try adjusting your search or filters.</div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | Smart Inventory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card: rgba(22, 27, 34, 0.75);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #4361ee;
+      --accent-glow: rgba(67, 97, 238, 0.3);
+      --input-bg: rgba(13, 17, 23, 0.6);
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      --blur: 12px;
+    }
+
+    html[data-theme="light"] {
+      --bg: #f0f4f8;
+      --card: rgba(255, 255, 255, 0.8);
+      --card-border: rgba(255, 255, 255, 0.5);
+      --text: #1f2937;
+      --text-muted: #6b7280;
+      --accent: #2563eb;
+      --accent-glow: rgba(37, 99, 235, 0.2);
+      --input-bg: rgba(255, 255, 255, 0.9);
+      --shadow: 0 20px 50px rgba(31, 41, 55, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(circle at 10% 20%, var(--accent-glow) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(112, 82, 180, 0.15) 0%, transparent 40%);
+      color: var(--text);
+      transition: background 0.3s ease;
+      padding: 1.5rem;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 480px;
+      perspective: 1000px;
+    }
+
+    .glass-card {
+      background: var(--card);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 2.5rem;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--accent), #7052b4);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .logo-box {
+      width: 48px;
+      height: 48px;
+      background: var(--accent);
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 1.5rem;
+      box-shadow: 0 8px 16px var(--accent-glow);
+    }
+
+    .brand-text h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-text p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .stepper {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .step-bar {
+      flex: 1;
+      height: 4px;
+      background: var(--card-border);
+      border-radius: 2px;
+      transition: all 0.4s ease;
+    }
+
+    .step-bar.active {
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    .form-title {
+      margin: 0 0 1.5rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .input-group {
+      margin-bottom: 1.25rem;
+      position: relative;
+    }
+
+    .input-group i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    input {
+      width: 100%;
+      height: 48px;
+      background: var(--input-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 0 1rem 0 2.75rem;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-glow);
+    }
+
+    .btn {
+      width: 100%;
+      height: 50px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      transition: all 0.3s ease;
+      margin-top: 1rem;
+    }
+
+    .btn:hover {
+      background: #3651d1;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px var(--accent-glow);
+    }
+
+    .role-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .role-btn {
+      padding: 1rem;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      background: var(--input-bg);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .role-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+      color: var(--accent);
+    }
+
+    .role-btn i {
+      font-size: 1.25rem;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .role-btn span {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .alert-error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; }
+    .alert-success { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); color: #4ade80; }
+
+    .footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .demo-box {
+      margin-top: 2rem;
+      padding: 1rem;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      font-size: 0.75rem;
+      border: 1px dashed var(--card-border);
+    }
+
+    .demo-box code {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .fade-in { animation: fadeIn 0.4s ease forwards; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hide { display: none; }
+
+    .theme-switch {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--card-border);
+      background: var(--card);
+      color: var(--text);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+  </style>
+</head>
+<body data-has-company="{{ 'true' if company_id else 'false' }}">
+
+  <div class="login-container">
+    <div class="glass-card">
+      <button id="themeToggle" class="theme-switch" title="Toggle Theme">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+
+      <div class="brand">
+        <div class="logo-box">
+          <i class="fa-solid fa-boxes-stacked"></i>
+        </div>
+        <div class="brand-text">
+          <h1>Smart Inventory</h1>
+          <p>Intelligence for modern business</p>
+        </div>
+      </div>
+
+      <div class="stepper">
+        <div class="step-bar active" id="s1"></div>
+        <div class="step-bar" id="s2"></div>
+        <div class="step-bar" id="s3"></div>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for cat, msg in messages %}
+            <div class="alert alert-{{ 'error' if cat == 'error' else 'success' }} fade-in">
+              <i class="fa-solid fa-{{ 'circle-exclamation' if cat == 'error' else 'circle-check' }}"></i>
+              {{ msg }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Step 1: Company Login -->
+      <div id="step1Panel" class="fade-in {% if company_id %}hide{% endif %}">
+        <h2 class="form-title">Business Authentication</h2>
+        <form method="POST" action="{{ url_for('auth.login') }}">
+          <input type="hidden" name="action" value="company">
+          <div class="input-group">
+            <i class="fa-solid fa-building"></i>
+            <input type="text" name="company_userid" placeholder="Company ID" required autofocus>
+          </div>
+          <div class="input-group">
+            <i class="fa-solid fa-key"></i>
+            <input type="password" name="company_password" placeholder="Company Password" required>
+            <i class="fa-solid fa-eye password-toggle" style="position: absolute; right: 1rem; left: auto; cursor: pointer; z-index: 5;"></i>
+          </div>
+          <button class="btn" type="submit">
+            Continue <i class="fa-solid fa-arrow-right-long"></i>
+          </button>
+        </form>
+        <div class="footer">
+          New here? <a href="{{ url_for('auth.register_company') }}">Register your business</a>
+        </div>
+      </div>
+
+      <!-- Step 2: Role Selection -->
+      <div id="step2Panel" class="fade-in {% if not company_id %}hide{% endif %}">
+        <h2 class="form-title">Select Portal</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+          Welcome back to <strong>{{ company_name }}</strong>. Please select your role.
+        </p>
+        <div class="role-options">
+          <div class="role-btn active" data-role="admin">
+            <i class="fa-solid fa-user-shield"></i>
+            <span>Administrator</span>
+          </div>
+          <div class="role-btn" data-role="staff">
+            <i class="fa-solid fa-user-tie"></i>
+            <span>Staff / Sales</span>
+          </div>
+        </div>
+        <button class="btn" id="goStep3">
+          Continue to Login <i class="fa-solid fa-arrow-right-long"></i>
+        </button>
+        <div class="footer">
+          <a href="{{ url_for('auth.clear_company') }}">Switch Company</a>
+        </div>
+      </div>
+
+      <!-- Step 3: User Credentials -->
+      <div id="step3Panel" class="fade-in hide">
+        <h2 class="form-title">User Sign-in</h2>
+        <form method="POST" action="{{ url_for('auth.login') }}">
+          <input type="hidden" name="action" value="user">
+          <input type="hidden" name="role" id="selectedRole" value="admin">
+          <div class="input-group">
+            <i class="fa-solid fa-user-circle"></i>
+            <input type="text" name="username" placeholder="Username" required autocomplete="username">
+          </div>
+          <div class="input-group">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" name="password" placeholder="Password" required autocomplete="current-password">
+            <i class="fa-solid fa-eye password-toggle" style="position: absolute; right: 1rem; left: auto; cursor: pointer; z-index: 5;"></i>
+          </div>
+          <button class="btn" type="submit">
+            Sign In <i class="fa-solid fa-right-to-bracket"></i>
+          </button>
+        </form>
+        <div class="footer">
+          <a href="#" onclick="location.reload(); return false;">Go back</a>
+        </div>
+      </div>
+
+      <div class="demo-box">
+        <strong>Demo Access</strong><br>
+        Company: <code>ganeshtraders</code> / <code>ganesh123</code><br>
+        Admin: <code>admin</code> / <code>admin123</code>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+      const THEME_KEY = 'smartInventoryTheme';
+      
+      function applyTheme(theme) {
+        root.setAttribute('data-theme', theme);
+        themeToggle.innerHTML = theme === 'dark' 
+          ? '<i class="fa-solid fa-sun"></i>' 
+          : '<i class="fa-solid fa-moon"></i>';
+      }
+
+      const savedTheme = localStorage.getItem(THEME_KEY) || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      applyTheme(savedTheme);
+
+      themeToggle.addEventListener('click', () => {
+        const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        localStorage.setItem(THEME_KEY, next);
+      });
+
+      const hasCompany = document.body.dataset.hasCompany === 'true';
+      const s1 = document.getElementById('s1');
+      const s2 = document.getElementById('s2');
+      const s3 = document.getElementById('s3');
+      const step2Panel = document.getElementById('step2Panel');
+      const step3Panel = document.getElementById('step3Panel');
+      const roleBtns = document.querySelectorAll('.role-btn');
+      const selectedRoleInput = document.getElementById('selectedRole');
+      const goStep3 = document.getElementById('goStep3');
+
+      let selectedRole = 'admin';
+
+      roleBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          roleBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedRole = btn.dataset.role;
+        });
+      });
+
+      if (goStep3) {
+        goStep3.addEventListener('click', () => {
+          selectedRoleInput.value = selectedRole;
+          step2Panel.classList.add('hide');
+          step3Panel.classList.remove('hide');
+          s2.classList.remove('active');
+          s3.classList.add('active');
+        });
+      }
+
+      if (hasCompany) {
+        s2.classList.add('active');
+      }
+
+      // Password eye toggle
+      document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('password-toggle')) {
+          const group = e.target.closest('.input-group');
+          if (!group) return;
+          const input = group.querySelector('input[type="password"], input[type="text"]');
+          if (input) {
+            if (input.type === 'password') {
+              input.type = 'text';
+              e.target.classList.remove('fa-eye');
+              e.target.classList.add('fa-eye-slash');
+            } else {
+              input.type = 'password';
+              e.target.classList.remove('fa-eye-slash');
+              e.target.classList.add('fa-eye');
+            }
+          }
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
+

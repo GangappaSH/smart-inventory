@@ -1,0 +1,449 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | Smart Inventory{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_sub %}Welcome back, {{ current_user.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .stats-grid { 
+    display: grid; 
+    gap: 1.25rem; 
+    grid-template-columns: repeat(4, 1fr); 
+    margin-bottom: 1.5rem; 
+  }
+  
+  .stat-card {
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 1.25rem;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .stat-info h3 { 
+    margin: 0; 
+    font-size: 1.25rem; 
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .stat-info p { 
+    margin: 0.15rem 0 0; 
+    color: var(--text-muted); 
+    font-size: 0.82rem;
+    font-weight: 500;
+  }
+
+  .blue { background: var(--accent-blue); box-shadow: 0 8px 20px rgba(67, 97, 238, 0.25); }
+  .green { background: var(--accent-green); box-shadow: 0 8px 20px rgba(34, 197, 94, 0.25); }
+  .amber { background: var(--accent-amber); box-shadow: 0 8px 20px rgba(245, 158, 11, 0.25); }
+  .red { background: var(--accent-red); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.25); }
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-header h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+  }
+
+  .widget-select {
+    width: auto;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card-soft);
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  @media (max-width: 1200px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .bottom-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 992px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 576px) {
+    .stats-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+  <div class="card stat-card animate-in">
+    <div class="stat-icon blue"><i class="fa-solid fa-boxes-stacked"></i></div>
+    <div class="stat-info">
+      <h3>{{ total_products }}</h3>
+      <p>Total Products</p>
+    </div>
+  </div>
+  
+  <div class="card stat-card animate-in" style="animation-delay: 0.05s">
+    <div class="stat-icon green"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+    <div class="stat-info">
+      <h3>₹{{ '%.2f'|format(total_sales_today) }}</h3>
+      <p>Today's Sales</p>
+    </div>
+  </div>
+
+  <div class="card stat-card animate-in" style="animation-delay: 0.1s">
+    <div class="stat-icon amber"><i class="fa-solid fa-calendar-check"></i></div>
+    <div class="stat-info">
+      <h3>₹{{ '%.2f'|format(total_sales_month) }}</h3>
+      <p>This Month</p>
+    </div>
+  </div>
+
+  <div class="card stat-card animate-in" style="animation-delay: 0.15s">
+    <div class="stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <div class="stat-info">
+      <h3>{{ low_stock|length }}</h3>
+      <p>Low Stock Alerts</p>
+    </div>
+  </div>
+</div>
+
+<div class="dashboard-grid">
+  <div class="card animate-in" style="animation-delay: 0.2s">
+    <div class="card-header">
+      <h3><i class="fa-solid fa-chart-line" style="color: var(--accent-blue)"></i> Sales Trend</h3>
+      <span class="badge badge-blue">Last 7 Days</span>
+    </div>
+    <div class="chart-container">
+      <canvas id="salesTrend"></canvas>
+    </div>
+  </div>
+
+  <div class="card animate-in" style="animation-delay: 0.25s">
+    <div class="card-header">
+      <h3><i class="fa-solid fa-chart-pie" style="color: var(--accent-purple)"></i> Category Mix</h3>
+      <select class="widget-select range-select" data-target="category-revenue">
+        <option value="today">Today</option>
+        <option value="yesterday">Yesterday</option>
+        <option value="this_week">This Week</option>
+        <option value="this_month" selected>This Month</option>
+        <option value="all">All Time</option>
+      </select>
+    </div>
+    <div class="chart-container">
+      <canvas id="categoryDonut"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-grid">
+  <div class="card animate-in" style="animation-delay: 0.3s">
+    <div class="card-header">
+      <h3><i class="fa-solid fa-ranking-star" style="color: var(--accent-amber)"></i> Top Products</h3>
+      <select class="widget-select range-select" data-target="top-products">
+        <option value="today">Today</option>
+        <option value="yesterday">Yesterday</option>
+        <option value="this_week">This Week</option>
+        <option value="this_month" selected>This Month</option>
+        <option value="all">All Time</option>
+      </select>
+    </div>
+    <div class="chart-container">
+      <canvas id="topProducts"></canvas>
+    </div>
+  </div>
+
+  <div class="card animate-in" style="animation-delay: 0.32s; padding: 0;">
+    <div class="card-header" style="padding: 1rem 1.25rem;">
+      <h3><i class="fa-solid fa-fire-flame-curved" style="color: var(--accent-red)"></i> Top Revenue</h3>
+      <select class="widget-select range-select" data-target="top-revenue">
+        <option value="today">Today</option>
+        <option value="yesterday">Yesterday</option>
+        <option value="this_week">This Week</option>
+        <option value="this_month" selected>This Month</option>
+        <option value="all">All Time</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table class="responsive-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Qty</th>
+            <th>Revenue</th>
+          </tr>
+        </thead>
+        <tbody id="top-revenue-body">
+          {% for p in top_revenue %}
+            <tr>
+              <td data-label="Product" style="font-weight: 600;">{{ p.name }}</td>
+              <td data-label="Qty">{{ p.qty }}</td>
+              <td data-label="Revenue" style="font-weight: 700; color: var(--accent-blue);">₹{{ '%.2f'|format(p.revenue) }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 2rem;">No data.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card animate-in" style="animation-delay: 0.35s; padding: 0;">
+    <div class="card-header" style="padding: 1rem 1.25rem;">
+      <h3><i class="fa-solid fa-clock-rotate-left" style="color: var(--accent-green)"></i> Sales History</h3>
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <select class="widget-select range-select" data-target="sales-history">
+          <option value="today">Today</option>
+          <option value="yesterday">Yesterday</option>
+          <option value="this_week">This Week</option>
+          <option value="this_month" selected>This Month</option>
+          <option value="all">All Time</option>
+        </select>
+        <a href="{{ url_for('sales.index') }}" class="btn" style="padding: 0.35rem 0.6rem; font-size: 0.75rem">View All</a>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="responsive-table">
+        <thead>
+          <tr>
+            <th>Invoice</th>
+            <th>Staff</th>
+            <th>Total</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="sales-history-body">
+          {% for sale in recent_sales %}
+            <tr>
+              <td data-label="Invoice"><a href="{{ url_for('sales.view_sale', id=sale.id) }}" style="font-weight: 600; color: var(--accent-blue); text-decoration: none;">{{ sale.invoice_no }}</a></td>
+              <td data-label="Staff">{{ sale.staff.full_name }}</td>
+              <td data-label="Total" style="font-weight: 700;">₹{{ '%.2f'|format(sale.total_amount) }}</td>
+              <td data-label="Date">{{ sale.sale_date.strftime('%d %b') }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No recent sales.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const textColor = isDark ? '#9ba7b4' : '#64748b';
+  const borderColor = isDark ? '#21262d' : '#e2e8f0';
+
+  Chart.defaults.color = textColor;
+  Chart.defaults.borderColor = borderColor;
+  Chart.defaults.font.family = "'Inter', sans-serif";
+
+  // Sales Trend Chart
+  new Chart(document.getElementById('salesTrend'), {
+    type: 'line',
+    data: {
+      labels: {{ chart_labels|tojson }},
+      datasets: [{
+        label: 'Sales',
+        data: {{ chart_data|tojson }},
+        borderColor: '#4361ee',
+        backgroundColor: 'rgba(67, 97, 238, 0.1)',
+        borderWidth: 3,
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: '#4361ee',
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: isDark ? '#161b22' : '#ffffff',
+          titleColor: isDark ? '#ffffff' : '#0f172a',
+          bodyColor: isDark ? '#9ba7b4' : '#64748b',
+          borderColor: borderColor,
+          borderWidth: 1,
+          padding: 12,
+          displayColors: false,
+          callbacks: {
+            label: (ctx) => `₹${ctx.parsed.y.toLocaleString('en-IN', {minimumFractionDigits: 2})}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (value) => `₹${value}`
+          }
+        }
+      }
+    }
+  });
+
+  // Category Donut Chart
+  const categoryDonutChart = new Chart(document.getElementById('categoryDonut'), {
+    type: 'doughnut',
+    data: {
+      labels: {{ category_labels|tojson }},
+      datasets: [{
+        data: {{ category_data|tojson }},
+        backgroundColor: ['#4361ee', '#3a0ca3', '#22c55e', '#f59e0b', '#ef4444', '#60a5fa'],
+        borderWidth: 0,
+        hoverOffset: 15
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '75%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 20,
+            usePointStyle: true,
+            pointStyle: 'circle'
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => ` ₹${ctx.parsed.toLocaleString('en-IN', {minimumFractionDigits: 2})}`
+          }
+        }
+      }
+    }
+  });
+
+  // Top Products Bar Chart
+  const topProductsChart = new Chart(document.getElementById('topProducts'), {
+    type: 'bar',
+    data: {
+      labels: {{ top_products|map(attribute='name')|list|tojson }},
+      datasets: [{
+        data: {{ top_products|map(attribute='total_qty')|list|tojson }},
+        backgroundColor: '#4361ee',
+        borderRadius: 8,
+        barThickness: 20
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+
+  // AJAX logic to dynamically reload widgets on change
+  document.querySelectorAll('.range-select').forEach(select => {
+    select.addEventListener('change', function() {
+      const target = this.getAttribute('data-target');
+      const val = this.value;
+      
+      fetch(`/dashboard/api/${target}?range=${val}`)
+        .then(res => res.json())
+        .then(data => {
+          if (target === 'top-products') {
+            topProductsChart.data.labels = data.map(item => item.name);
+            topProductsChart.data.datasets[0].data = data.map(item => item.total_qty);
+            topProductsChart.update();
+          } else if (target === 'category-revenue') {
+            categoryDonutChart.data.labels = data.map(item => item.name);
+            categoryDonutChart.data.datasets[0].data = data.map(item => item.revenue);
+            categoryDonutChart.update();
+          } else if (target === 'top-revenue') {
+            const tbody = document.getElementById('top-revenue-body');
+            tbody.innerHTML = '';
+            if (data.length === 0) {
+              tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 2rem;">No data.</td></tr>';
+            } else {
+              data.forEach(p => {
+                tbody.innerHTML += `
+                  <tr>
+                    <td data-label="Product" style="font-weight: 600;">${p.name}</td>
+                    <td data-label="Qty">${p.qty}</td>
+                    <td data-label="Revenue" style="font-weight: 700; color: var(--accent-blue);">₹${p.revenue.toFixed(2)}</td>
+                  </tr>
+                `;
+              });
+            }
+          } else if (target === 'sales-history') {
+            const tbody = document.getElementById('sales-history-body');
+            tbody.innerHTML = '';
+            if (data.length === 0) {
+              tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No recent sales.</td></tr>';
+            } else {
+              data.forEach(sale => {
+                tbody.innerHTML += `
+                  <tr>
+                    <td data-label="Invoice"><a href="/sales/${sale.id}" style="font-weight: 600; color: var(--accent-blue); text-decoration: none;">${sale.invoice_no}</a></td>
+                    <td data-label="Staff">${sale.staff_name}</td>
+                    <td data-label="Total" style="font-weight: 700;">₹${sale.total_amount.toFixed(2)}</td>
+                    <td data-label="Date">${sale.sale_date}</td>
+                  </tr>
+                `;
+              });
+            }
+          }
+        })
+        .catch(err => console.error(err));
+    });
+  });
+</script>
+{% endblock %}
+
+
+
