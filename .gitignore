@@ -7,8 +7,12 @@ __pycache__/
 venv/
 .env
 
-# SQLite database
-instance/*.db
+# Flask / SQLite database
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
 
 # IDEs
 .vscode/
